@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Senso Café Menu</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>Senso Café</h1>
+    <button id="language-toggle">GR / EN</button>
+  </header>
+
+  <main>
+    <div id="categories"></div>
+    <div id="subcategories"></div>
+    <div id="products"></div>
+  </main>
+
+  <script src="senso_menu_data.js"></script>
+  <script>
+    const categoryTranslations = {"Food": "\u03a6\u03b1\u03b3\u03b7\u03c4\u03cc", "Beverages": "\u03a1\u03bf\u03c6\u03ae\u03bc\u03b1\u03c4\u03b1", "Alcoholic Beverages": "\u0391\u03bb\u03ba\u03bf\u03bf\u03bb\u03bf\u03cd\u03c7\u03b1 \u03a0\u03bf\u03c4\u03ac", "White Wines": "\u039b\u03b5\u03c5\u03ba\u03ac \u039a\u03c1\u03b1\u03c3\u03b9\u03ac", "Rose Wines": "\u03a1\u03bf\u03b6\u03ad \u039a\u03c1\u03b1\u03c3\u03b9\u03ac", "Red Wines": "\u039a\u03cc\u03ba\u03ba\u03b9\u03bd\u03b1 \u039a\u03c1\u03b1\u03c3\u03b9\u03ac", "Sparkling Wines": "\u0391\u03c6\u03c1\u03ce\u03b4\u03b7 \u039a\u03c1\u03b1\u03c3\u03b9\u03ac"};
+    const subcategoryTranslations = {"Starters": "\u039f\u03c1\u03b5\u03ba\u03c4\u03b9\u03ba\u03ac", "Salads": "\u03a3\u03b1\u03bb\u03ac\u03c4\u03b5\u03c2", "Sandwiches & Wraps": "\u03a3\u03ac\u03bd\u03c4\u03bf\u03c5\u03b9\u03c4\u03c2 & \u03a4\u03bf\u03c1\u03c4\u03af\u03b3\u03b9\u03b5\u03c2", "Burgers": "\u039c\u03c0\u03ad\u03c1\u03b3\u03ba\u03b5\u03c1", "Pasta": "\u0396\u03c5\u03bc\u03b1\u03c1\u03b9\u03ba\u03ac", "Main Course": "\u039a\u03c5\u03c1\u03af\u03c9\u03c2 \u03a0\u03b9\u03ac\u03c4\u03b1", "Platters": "\u03a0\u03b9\u03b1\u03c4\u03ad\u03bb\u03b5\u03c2", "Kids Menu": "\u03a0\u03b1\u03b9\u03b4\u03b9\u03ba\u03cc \u039c\u03b5\u03bd\u03bf\u03cd", "Desserts": "\u0395\u03c0\u03b9\u03b4\u03cc\u03c1\u03c0\u03b9\u03b1", "Cold Beverages": "\u039a\u03c1\u03cd\u03b1 \u03a1\u03bf\u03c6\u03ae\u03bc\u03b1\u03c4\u03b1", "Hot Beverages": "\u0396\u03b5\u03c3\u03c4\u03ac \u03a1\u03bf\u03c6\u03ae\u03bc\u03b1\u03c4\u03b1", "Tea": "\u03a4\u03c3\u03ac\u03b9", "Soft Drinks": "\u0391\u03bd\u03b1\u03c8\u03c5\u03ba\u03c4\u03b9\u03ba\u03ac", "Juices": "\u03a7\u03c5\u03bc\u03bf\u03af", "White": "\u039b\u03b5\u03c5\u03ba\u03ac", "Rose": "\u03a1\u03bf\u03b6\u03ad", "Red": "\u039a\u03cc\u03ba\u03ba\u03b9\u03bd\u03b1"};
+    let currentLang = localStorage.getItem('preferredLanguage') || 'en';
+    let lastCategory = null;
+    let lastSubcategory = null;
+
+    const categoriesDiv = document.getElementById("categories");
+    const subcategoriesDiv = document.getElementById("subcategories");
+    const productsDiv = document.getElementById("products");
+
+    function translate(label, map) {
+      if (currentLang === 'gr' && label in map) {
+        return map[label];
+      }
+      return label;
+    }
+
+    function showCategories() {
+      categoriesDiv.innerHTML = "<h2>Select Category</h2>";
+      subcategoriesDiv.innerHTML = "";
+      productsDiv.innerHTML = "";
+      Object.keys(menuData).forEach(category => {
+        const btn = document.createElement("button");
+        btn.textContent = translate(category, categoryTranslations);
+        btn.onclick = () => {
+          lastCategory = category;
+          const subcats = Object.keys(menuData[category]);
+          if (subcats.length === 1 && (subcats[0] === '-' || subcats[0] === '')) {
+            lastSubcategory = subcats[0];
+            showProducts(category, subcats[0]);
+            subcategoriesDiv.innerHTML = "";
+          } else {
+            showSubcategories(category);
+          }
+        };
+        categoriesDiv.appendChild(btn);
+      });
+    }
+
+    function showSubcategories(category) {
+      const categoryTitle = translate(category, categoryTranslations);
+      subcategoriesDiv.innerHTML = `<h3>${categoryTitle}</h3>`;
+      productsDiv.innerHTML = "";
+
+      Object.keys(menuData[category]).forEach(sub => {
+        if (sub !== '-' && sub.trim() !== '') {
+          const btn = document.createElement("button");
+          btn.textContent = translate(sub, subcategoryTranslations);
+          btn.onclick = () => {
+            lastCategory = category;
+            lastSubcategory = sub;
+            showProducts(category, sub);
+          };
+          subcategoriesDiv.appendChild(btn);
+        }
+      });
+    }
+
+    function showProducts(category, subcategory) {
+      const subcategoryTitle = translate(subcategory, subcategoryTranslations);
+      productsDiv.innerHTML = `<h4>${subcategoryTitle}</h4>`;
+
+      const items = menuData[category][subcategory];
+      items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "menu-item";
+        card.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div>
+            <strong>${item.name}</strong><br/>
+            <small>${currentLang === 'en' ? item.description_en : item.description_gr}</small><br/>
+            <strong>💶 ${item.price}</strong><br/>
+            <span>⚠ Allergens: ${item.allergens}</span>
+          </div>
+        `;
+        productsDiv.appendChild(card);
+      });
+    }
+
+    document.getElementById("language-toggle").onclick = () => {
+      currentLang = currentLang === 'en' ? 'gr' : 'en';
+      localStorage.setItem('preferredLanguage', currentLang);
+      showCategories();
+      if (lastCategory && lastSubcategory) {
+        showProducts(lastCategory, lastSubcategory);
+      }
+    };
+
+    showCategories();
+  </script>
+</body>
+</html>
